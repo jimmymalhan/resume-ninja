@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Resume</title>
+    <link rel="stylesheet" href="{{ url_for('static', path='styles.css') }}">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <nav>
+                <ul>
+                    <li><a href="#">Home</a></li>
+                    <li><a href="#">About</a></li>
+                    <li><a href="#">Experience</a></li>
+                    <li><a href="#">Education</a></li>
+                    <li><a href="#">Skills</a></li>
+                    <li><a href="#">Contact</a></li>
+                </ul>
+            </nav>
+        </header>
+        
+        <section class="hero-section">
+            <div class="hero-content">
+                <h1 contenteditable="true">{{ resume.name }}</h1>
+                <p>Email: <span contenteditable="true">{{ resume.email }}</span></p>
+                <p>LinkedIn: <a href="{{ resume.linkedin }}" contenteditable="true">{{ resume.linkedin }}</a></p>
+            </div>
+            <div class="hero-image">
+                <img src="{{ resume.picture }}" alt="Profile Image of {{ resume.name }}">
+            </div>
+        </section>
+
+        <section class="content-section">
+            <h2>Leadership and Accomplishments</h2>
+            <ul>
+                {% for accomplishment in resume.accomplishments %}
+                <li contenteditable="true">{{ accomplishment }}</li>
+                {% endfor %}
+            </ul>
+        </section>
+
+        <section class="content-section">
+            <h2>Experience</h2>
+            {% for experience in resume.experience %}
+            <div class="experience">
+                <h3 contenteditable="true">{{ experience.position }}</h3>
+                <h4 contenteditable="true">{{ experience.company }}</h4>
+                <p contenteditable="true">{{ experience.duration }}</p>
+                <ul>
+                    {% for responsibility in experience.responsibilities %}
+                    <li contenteditable="true">{{ responsibility }}</li>
+                    {% endfor %}
+                </ul>
+            </div>
+            {% endfor %}
+        </section>
+
+        <section class="content-section">
+            <h2>Education</h2>
+            <div class="education">
+                <p contenteditable="true">{{ resume.education.certification }}</p>
+                <p contenteditable="true">{{ resume.education.master_degree }}</p>
+                <p contenteditable="true">{{ resume.education.bachelor_degree }}</p>
+                <p contenteditable="true">{{ resume.education.college }}</p>
+            </div>
+        </section>
+    </div>
+</body>
+</html>
