@@ -5,6 +5,8 @@ from starlette.responses import JSONResponse
 from starlette.templating import Jinja2Templates
 from fastapi.responses import HTMLResponse
 import re
+from fastapi import FastAPI
+from fastapi.staticfiles import StaticFiles
 
 class StaticFilesRouter(StaticFiles):
     async def route(self, scope, receive, send):
@@ -24,7 +26,11 @@ class StaticFilesRouter(StaticFiles):
         return path
 
 app = FastAPI()
+# Mount the static files directory
+app.mount("/static", StaticFiles(directory="static"), name="static")
 templates = Jinja2Templates(directory="./templates")
+
+
 
 resume_text = """
 Jimmy Malhan
@@ -146,6 +152,9 @@ def extract_details(resume_text):
         details['education'] = {}  # Add default empty dictionary if education details are not found
 
     return details
+
+# app.router.route_class = StaticFilesRouter
+# app.mount("/static", StaticFiles(directory="static"), name="static")
 
 @app.get('/', response_class=HTMLResponse)
 async def index(request: Request):
