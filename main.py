@@ -1,19 +1,37 @@
-import re
-from fastapi.staticfiles import StaticFiles
-from starlette.routing import Request, Route
-from starlette.templating import Jinja2Templates
 from fastapi import FastAPI, Request
-from fastapi.responses import FileResponse
+from fastapi.staticfiles import StaticFiles
+from starlette.routing import NoMatchFound
+from starlette.responses import JSONResponse
+from starlette.templating import Jinja2Templates
+from fastapi.responses import HTMLResponse
+import re
 
+class StaticFilesRouter(StaticFiles):
+    async def route(self, scope, receive, send):
+        request = Request(scope, receive=receive)
+        try:
+            match, child_scope = await self.resolve(request)
+            if match is None:
+                raise NoMatchFound()
+            scope["path"] = child_scope["path"]
+            scope["path_params"] = child_scope["path_params"]
+            return await self.send_response(match, scope, receive, send)
+        except NoMatchFound:
+            response = JSONResponse({"detail": "Not Found"}, status_code=404)
+            await response(scope, receive, send)
+
+    def get_route_path(self, path: str) -> str:
+        return path
 
 app = FastAPI()
 templates = Jinja2Templates(directory="./templates")
 
 resume_text = """
 Jimmy Malhan
-Tarzana, CA, 9135Led6
+Tarzana, CA, 91356
 Python, Java, Node.js, Shell Terraform, Go
-jimmymalhan999@gmail.com
+
+email -jimmymalhan999@gmail.com
 
 Leadership and Accomplishments
 Exhibited 15+ YOE in software architecture design, building microservices, & leading application modernization & infrastructure migration projects. Fostered strong relationships with up to 300,000 concurrent stakeholder’s connections.
@@ -91,54 +109,52 @@ def extract_details(resume_text):
     accomplishments_regex = r"Leadership and Accomplishments\n(.+?)\n\n"
     accomplishments_match = re.search(accomplishments_regex, resume_text, re.DOTALL)
     if accomplishments_match:
-        details['accomplishments'] = [accomplishment.strip() for accomplishment in accomplishments_match.group(1).split("\n•")]
+        details['accomplishments'] = [line.strip() for line in accomplishments_match.group(1).split("\n•")]
 
     # Extract experience
-    experience_regex = r"Experience\n(.*?)\n\n"
-    experience_matches = re.finditer(experience_regex, resume_text, re.DOTALL)
-    details['experience'] = []
-    for match in experience_matches:
-        experience = {}
-        lines = match.group(1).split("\n")
-        experience['company'] = lines[0]
-        experience['location'] = lines[1]
-        experience['duration'] = lines[2]
-        experience['position'] = lines[3]
-        experience['responsibilities'] = [responsibility.strip() for responsibility in lines[4:]]
-        details['experience'].append(experience)
+    experience_regex = r"Experience\n(.+?)\n\n"
+    experience_match = re.search(experience_regex, resume_text, re.DOTALL)
+    if experience_match:
+        experience_lines = [line.strip() for line in experience_match.group(1).split("\n•")]
+        details['experience'] = []
+        for line in experience_lines:
+            company, location, date_range = line.split(" " * 2, maxsplit=2)
+            position, *description = date_range.split("\n")
+            details['experience'].append({
+                'company': company,
+                'location': location,
+                'position': position,
+                'description': "\n".join(description)
+            })
 
     # Extract education
-    education_regex = r"Education\n(.*?)(?=\n{2}|\n\w)"
+    education_regex = r"Education\n(.+?)\n\n"
     education_match = re.search(education_regex, resume_text, re.DOTALL)
     if education_match:
-        education_lines = education_match.group(1).split("\n")
+        education_lines = [line.strip() for line in education_match.group(1).split("\n")]
         details['education'] = {}
-
         for line in education_lines:
-            line = line.strip()
-            if line.startswith("AWS Solutions Architect Certi"):
-                details['education']['certification'] = line
-            elif line.startswith("Master’s degree"):
+            if line.startswith("Master’s degree"):
                 details['education']['master_degree'] = line
             elif line.startswith("Bachelor’s degree"):
                 details['education']['bachelor_degree'] = line
+            elif line.startswith("AWS Solutions Architect Certi"):
+                details['education']['certification'] = line
             else:
                 details['education']['college'] = line
+    else:
+        details['education'] = {}  # Add default empty dictionary if education details are not found
 
     return details
 
-# Mount the static files directory
-app.mount("/static", StaticFiles(directory="./static"), name="static")
-
-@app.get('/')
+@app.get('/', response_class=HTMLResponse)
 async def index(request: Request):
     resume_details = extract_details(resume_text)
     return templates.TemplateResponse('index.html', {'request': request, 'resume': resume_details})
 
-# @app.route('/', methods=['GET'])
-# async def index(request: Request):
-#     return templates.TemplateResponse('index.html', {'request': request, 'resume': resume_details})
+app.router.route_class = StaticFilesRouter
+app.mount("/static", StaticFiles(directory="static"), name="static")
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+    uvicorn.run(app, host="0.0.0.0", port=8000, debug=True)
