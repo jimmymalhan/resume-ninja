@@ -1,71 +1,199 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Resume</title>
-    <link rel="stylesheet" href="{{ url_for('static', path='styles.css') }}">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Resume</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f5f5f5;
+    }
+  
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 20px;
+      border: 1px solid #ddd;
+      background-color: #fff;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+  
+    header {
+      background-color: #333;
+      padding: 20px;
+      color: #fff;
+    }
+  
+    nav ul {
+      list-style: none;
+      display: flex;
+      justify-content: center;
+    }
+  
+    nav ul li {
+      margin-right: 20px;
+    }
+  
+    nav ul li a {
+      color: #fff;
+      text-decoration: none;
+    }
+  
+    .hero-section {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 40px;
+    }
+  
+    .hero-content {
+      flex: 1;
+    }
+  
+    .hero-content h1 {
+      font-size: 36px;
+      margin-bottom: 10px;
+      color: #333;
+    }
+  
+    .hero-content p {
+      margin-bottom: 5px;
+    }
+  
+    .hero-content p span {
+      color: #66aaff;
+    }
+  
+    .hero-content a {
+      color: #66aaff;
+      text-decoration: none;
+    }
+  
+    .hero-image {
+      display: flex;
+      justify-content: center;
+      align-items: flex-end;
+      margin-top: 20px;
+    }
+  
+    .hero-image img {
+      width: 200px;
+      height: 200px;
+      object-fit: cover;
+      border-radius: 50%;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+    }
+  
+    .content-section {
+      margin-bottom: 40px;
+      border-bottom: 1px solid #ddd;
+      padding-bottom: 20px;
+    }
+  
+    .content-section:last-child {
+      border-bottom: none;
+    }
+  
+    .content-section h2 {
+      font-size: 24px;
+      margin-bottom: 20px;
+      color: #333;
+    }
+  
+    .content-section ul {
+      list-style: disc;
+      margin-left: 20px;
+    }
+  
+    .content-section li {
+      margin-bottom: 5px;
+    }
+  
+    .education p {
+      margin-bottom: 10px;
+    }
+  
+    /* Add a class to indicate the active link */
+    .active {
+      font-weight: bold;
+      color: #66aaff;
+    }
+  </style>
+  <script>
+    document.addEventListener("DOMContentLoaded", function() {
+      var navLinks = document.querySelectorAll("nav ul li a");
+
+      navLinks.forEach(function(link) {
+        link.addEventListener("click", function(event) {
+          event.preventDefault();
+          navLinks.forEach(function(item) {
+            item.classList.remove("active");
+          });
+          link.classList.add("active");
+          var sectionName = link.textContent.toLowerCase();
+          window.location.href = "new_page.html?section=" + sectionName;
+        });
+      });
+    });
+  </script>
 </head>
 <body>
-    <div class="container">
-        <header>
-            <nav>
-                <ul>
-                    <li><a href="#">Home</a></li>
-                    <li><a href="#">About</a></li>
-                    <li><a href="#">Experience</a></li>
-                    <li><a href="#">Education</a></li>
-                    <li><a href="#">Skills</a></li>
-                    <li><a href="#">Contact</a></li>
-                </ul>
-            </nav>
-        </header>
-        
-        <section class="hero-section">
-            <div class="hero-content">
-                <h1 contenteditable="true">{{ resume.name }}</h1>
-                <p>Email: <span contenteditable="true">{{ resume.email }}</span></p>
-                <p>LinkedIn: <a href="{{ resume.linkedin }}" contenteditable="true">{{ resume.linkedin }}</a></p>
-            </div>
-            <div class="hero-image">
-                <img src="{{ resume.picture }}" alt="Profile Image of {{ resume.name }}">
-            </div>
-        </section>
+  <div class="container">
+    <header>
+      <nav>
+        <ul>
+          <li><a href="#">Home</a></li>
+          <li><a href="#">About</a></li>
+          <li><a href="#">Experience</a></li>
+          <li><a href="#">Education</a></li>
+          <li><a href="#">Skills</a></li>
+          <li><a href="#">Contact</a></li>
+        </ul>
+      </nav>
+    </header>
 
-        <section class="content-section">
-            <h2>Leadership and Accomplishments</h2>
-            <ul>
-                {% for accomplishment in resume.accomplishments %}
-                <li contenteditable="true">{{ accomplishment }}</li>
-                {% endfor %}
-            </ul>
-        </section>
+    <section class="hero-section">
+      <div class="hero-content">
+        <h1 contenteditable="true">Insert Your Name Here</h1>
+        <p>Email: <span contenteditable="true">Insert Your Email Here</span></p>
+        <p>LinkedIn: <a href="Insert Your LinkedIn URL Here" contenteditable="true">Insert Your LinkedIn URL Here</a></p>
+      </div>
+      <div class="hero-image">
+        <a href="Insert URL of Larger Image or Separate Page Here">
+          <img src="https://via.placeholder.com/200x200?text=Picture+Here" alt="Profile Image">
+        </a>
+      </div>
+    </section>
 
-        <section class="content-section">
-            <h2>Experience</h2>
-            {% for experience in resume.experience %}
-            <div class="experience">
-                <h3 contenteditable="true">{{ experience.position }}</h3>
-                <h4 contenteditable="true">{{ experience.company }}</h4>
-                <p contenteditable="true">{{ experience.duration }}</p>
-                <ul>
-                    {% for responsibility in experience.responsibilities %}
-                    <li contenteditable="true">{{ responsibility }}</li>
-                    {% endfor %}
-                </ul>
-            </div>
-            {% endfor %}
-        </section>
+    <section class="content-section">
+      <h2>Leadership and Accomplishments</h2>
+      <ul>
+        <li contenteditable="true">Insert Your Accomplishment Here</li>
+      </ul>
+    </section>
 
-        <section class="content-section">
-            <h2>Education</h2>
-            <div class="education">
-                <p contenteditable="true">{{ resume.education.certification }}</p>
-                <p contenteditable="true">{{ resume.education.master_degree }}</p>
-                <p contenteditable="true">{{ resume.education.bachelor_degree }}</p>
-                <p contenteditable="true">{{ resume.education.college }}</p>
-            </div>
-        </section>
-    </div>
+    <section class="content-section">
+      <h2>Experience</h2>
+      <div class="experience">
+        <h3 contenteditable="true">Insert Your Position Here</h3>
+        <h4 contenteditable="true">Insert Company Name Here</h4>
+        <p contenteditable="true">Insert Duration Here</p>
+        <ul>
+          <li contenteditable="true">Insert Responsibility Here</li>
+        </ul>
+      </div>
+    </section>
+
+    <section class="content-section">
+      <h2>Education</h2>
+      <div class="education">
+        <p contenteditable="true">Insert Certification Here</p>
+        <p contenteditable="true">Insert Master's Degree Here</p>
+        <p contenteditable="true">Insert Bachelor's Degree Here</p>
+        <p contenteditable="true">Insert College/University Name Here</p>
+      </div>
+    </section>
+  </div>
 </body>
 </html>
