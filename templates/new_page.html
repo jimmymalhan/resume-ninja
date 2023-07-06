@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>New Page</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f5f5f5;
+    }
+  
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 20px;
+      border: 1px solid #ddd;
+      background-color: #fff;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+  
+    h1 {
+      font-size: 28px;
+      margin-bottom: 20px;
+      color: #333;
+    }
+  
+    p {
+      margin-bottom: 10px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1 id="section-title"></h1>
+    <p id="section-content"></p>
+    <p>Feel free to customize this section with your own content!</p>
+  </div>
+
+  <script>
+    // JavaScript to handle dynamic content on new_page.html
+    document.addEventListener("DOMContentLoaded", function() {
+      var urlParams = new URLSearchParams(window.location.search);
+      var sectionName = urlParams.get("section");
+
+      var sectionTitleElement = document.getElementById("section-title");
+      var sectionContentElement = document.getElementById("section-content");
+
+      if (sectionName) {
+        sectionTitleElement.textContent = sectionName.charAt(0).toUpperCase() + sectionName.slice(1);
+        
+        if (sectionName === "about") {
+          sectionContentElement.textContent = "Provide a brief overview of yourself, your skills, and your goals. Highlight your strengths and describe your passion for the field.";
+        } 
+        else if (sectionName === "home"){
+          sectionContentElement.textContent = "Welcome to your resume! Use this home page to introduce yourself and your resume. Provide a brief overview of your skills and experience, and describe your career goals.";
+        }
+        else if (sectionName === "experience") {
+          sectionContentElement.textContent = "List your work experience, including job titles, company names, durations, and responsibilities. Highlight your achievements and skills acquired during each role.";
+        } else if (sectionName === "education") {
+          sectionContentElement.textContent = "Include your educational background, such as degrees, certifications, and the institutions you attended. Mention any academic honors or notable achievements.";
+        } else if (sectionName === "skills") {
+          sectionContentElement.textContent = "Outline your key skills and areas of expertise. Include both technical and soft skills relevant to your profession.";
+        } else if (sectionName === "contact") {
+          sectionContentElement.textContent = "Provide your contact information, such as email address, phone number, and any relevant social media profiles or website links.";
+        } else {
+          sectionContentElement.textContent = "This section is under development. Check back soon for more updates!";
+        }
+      }
+    });
+  </script>
+</body>
+</html>
+
