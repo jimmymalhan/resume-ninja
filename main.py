@@ -1,72 +1,12 @@
 import re
-from fastapi.staticfiles import StaticFiles
+import psycopg2
+from fastapi.staticfiles import StaticFiles, FastAPI, Request
+from fastapi.responses import FileResponse
 from starlette.routing import Request, Route
 from starlette.templating import Jinja2Templates
-from fastapi import FastAPI, Request
-from fastapi.responses import FileResponse
-
 
 app = FastAPI()
 templates = Jinja2Templates(directory="./templates")
-
-resume_text = """
-Jimmy Malhan
-Tarzana, CA, 9135Led6
-Python, Java, Node.js, Shell Terraform, Go
-jimmymalhan999@gmail.com
-
-Leadership and Accomplishments
-Exhibited 15+ YOE in software architecture design, building microservices, & leading application modernization & infrastructure migration projects. Fostered strong relationships with up to 300,000 concurrent stakeholder’s connections.
-Demonstrated 5 + years of experience in leadership experience by building, coaching, & managing teams of up to 10 members across retail & healthcare projects.
-
-Experience
-HealthJoy 		      Los Angeles, CA			Aug 2022 to Present
-Engineering Manager Advisory at HealthJoy
-Coached a team of 8 engineers in building, integrating, & managing backend, Full-stack, & mobile engineering projects.
-Led and actively participated in architecting systems and conducting code reviews to scale systems while meeting user needs efficiently.
-Pioneered and orchestrated the initiatives for MVP in 3 months for SDK and API using gRPC, swiftly implemented them into production, and fine-tuned them based on user feedback, surpassing all MVP goals.
-Collaborated with cross-functional teams, including product managers, project managers, designers, security, compliance, and Go-to-Market teams, to execute the product roadmap, ensuring timely and successful product releases while anticipating and proactively resolving any potential launch delays.
-Initiated a transformative process within the organization, actively establishing clear career paths for engineers and managers, and nurturing a culture of growth and development that propelled our team to unprecedented heights.
-
-Skills: Leadership, Python, Node.js, Shell, Swift, Kotlin, CI/CD, Terraform, Kubernetes, Distributed Systems, OOP, SQL, NoSQL, Redis.
-
-Amazon Web Services 		      Los Angeles, CA			Jan 2019 to Present
-Engineering Manager II
-Engineering Manager		
-					  		                            
-Coached a team of 10 engineers in building, integrating, & managing backend, platform, & mobile engineering projects.
-Introduced an e-commerce platform for exclusive items on Amazon's retail website using a microservices architecture with Python, Java & Node.js, successfully overcoming disaster recovery challenges by RTO & RPO.
-Established an ETL pipeline to streamline vendor integration, reducing onboarding time from 7 weeks to 2 weeks.
-Scaled the e-commerce platform from handling 1 million requests per 10 minutes to 1 million requests per second year over year by using techniques such as load balancing & tools such as Kubernetes to improve performance.
-
-Skills: Leadership, Python, Java, Node.js, Shell, CI/CD, Terraform, Kubernetes, Distributed Systems, OOP, SQL, NoSQL, Redis.
-
-Skechers  			                  Los Angeles, CA		            Oct 2016 to Dec 2018 
-Engineering Manager
-Sr. Software Engineer 			 		
-Led a team of 4 engineers in the leadership of retail POS systems on on-premises servers & in the AWS cloud for 100 retail stores nationwide, achieving 99.998% uptime.
-Rolled out migration on transaction data to AWS using an asynchronous model & technologies such as Amazon Simple Queue Service (SQS), resulting in a 30% reduction in redundancy.
-Successfully deployed a backend system for ACH transfers across 100 retail stores in the USA, overcoming challenges such as coordinating with multiple stakeholders & ensuring data security during the transition. 
-Migrated the on-premises software architecture to AWS using a serverless architecture & databases such as Amazon RDS & Amazon DynamoDB to reduce maintenance costs.
-
-Skills: Leadership, Python, Node.js, Shell, CI/CD, Kubernetes, Distributed Systems, OOP, SQL, NoSQL, Redis
-
-Sarpanch International                           Ludhiana, Punjab                     Aug 2008 to Sep 2016 
-Sr. Software Engineer
-Software Engineer	
-Software Engineer Intern						           	 		
-Redesigned RESTful APIs in Django, resulting in a 25% increase in reporting speed for the internal analytics team. 
-Applied software engineering best practices during the development of new features & enhancements, including code review & unit testing, resulting in improved user experience through faster loading times & increased stability.
-Implemented agile methodology as a convincing scrum master during a 2-week sprint session, resulting in shorter development cycles by creating smaller, more manageable modules.
-Skills: Python, Java, CI/CD, Distributed Systems, OOP, SQL, NoSQL
-
-Education
-AWS Solutions Architect Certiﬁed, 2020 
-Master’s degree in Information Technology Management 
-California Lutheran University, Thousand Oaks, CA 
-Bachelor’s degree in Business Administration
-Punjab College of Technical Education, Punjab, India
-"""
 
 def extract_details(resume_text):
     details = {}
@@ -127,17 +67,35 @@ def extract_details(resume_text):
 
     return details
 
-# Mount the static files directory
-app.mount("/static", StaticFiles(directory="./static"), name="static")
+
+def get_resume_text():
+    try:
+        conn = psycopg2.connect(
+            host="DB_HOST",
+            database="DB_NAME",
+            user="DB_USER",
+            password="DB_PASSWORD"
+        )
+        cursor = conn.cursor()
+        cursor.execute("SELECT resume_text FROM resume_table WHERE id = 1")
+        resume_text = cursor.fetchone()[0]
+        cursor.close()
+        conn.close()
+        return resume_text
+    except (psycopg2.Error, Exception) as e:
+        print(f"Error retrieving resume text from the database: {e}")
+        return None
+
 
 @app.get('/')
 async def index(request: Request):
-    resume_details = extract_details(resume_text)
-    return templates.TemplateResponse('index.html', {'request': request, 'resume': resume_details})
+    resume_text = get_resume_text()
+    if resume_text is not None:
+        resume_details = extract_details(resume_text)
+        return templates.TemplateResponse('index.html', {'request': request, 'resume': resume_details})
+    else:
+        return {"message": "Failed to retrieve resume details. Please try again later."}
 
-# @app.route('/', methods=['GET'])
-# async def index(request: Request):
-#     return templates.TemplateResponse('index.html', {'request': request, 'resume': resume_details})
 
 if __name__ == "__main__":
     import uvicorn
