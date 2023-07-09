@@ -1,12 +1,23 @@
 import re
-import psycopg2
-from fastapi.staticfiles import StaticFiles, FastAPI, Request
-from fastapi.responses import FileResponse
-from starlette.routing import Request, Route
+import sqlite3
+from fastapi.staticfiles import StaticFiles
+from fastapi import FastAPI, Request
 from starlette.templating import Jinja2Templates
 
 app = FastAPI()
+app.mount("/static", StaticFiles(directory="./templates"), name="static")
 templates = Jinja2Templates(directory="./templates")
+
+# Create connection to SQLite database
+conn = sqlite3.connect('resume.db')
+
+# Create table if not exists
+conn.execute('''
+    CREATE TABLE IF NOT EXISTS resume_table (
+        id INTEGER PRIMARY KEY,
+        resume_text TEXT
+    )
+''')
 
 def extract_details(resume_text):
     details = {}
@@ -68,35 +79,36 @@ def extract_details(resume_text):
     return details
 
 
-def get_resume_text():
+def save_resume_text(resume_text):
     try:
-        conn = psycopg2.connect(
-            host="DB_HOST",
-            database="DB_NAME",
-            user="DB_USER",
-            password="DB_PASSWORD"
-        )
         cursor = conn.cursor()
-        cursor.execute("SELECT resume_text FROM resume_table WHERE id = 1")
-        resume_text = cursor.fetchone()[0]
+        cursor.execute("INSERT INTO resume_table (resume_text) VALUES (?)", (resume_text,))
+        conn.commit()
         cursor.close()
-        conn.close()
-        return resume_text
-    except (psycopg2.Error, Exception) as e:
-        print(f"Error retrieving resume text from the database: {e}")
-        return None
+        return True
+    except (sqlite3.Error, Exception) as e:
+        print(f"Error saving resume text to the database: {e}")
+        return False
 
 
 @app.get('/')
 async def index(request: Request):
-    resume_text = get_resume_text()
-    if resume_text is not None:
-        resume_details = extract_details(resume_text)
-        return templates.TemplateResponse('index.html', {'request': request, 'resume': resume_details})
+    return templates.TemplateResponse('index.html', {'request': request})
+
+
+@app.post('/submit')
+async def submit_resume(request: Request):
+    form_data = await request.form()
+    resume_text = form_data.get('resume_text')
+    if resume_text:
+        if save_resume_text(resume_text):
+            return {"message": "Resume details submitted successfully!"}
+        else:
+            return {"message": "Failed to submit resume details. Please try again later."}
     else:
-        return {"message": "Failed to retrieve resume details. Please try again later."}
+        return {"message": "Invalid request. Please provide resume text."}
 
-
-if __name__ == "__main__":
-    import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+# Close the connection to the SQLite database when the application shuts down
+@app.on_event("shutdown")
+def shutdown_event():
+    conn.close()

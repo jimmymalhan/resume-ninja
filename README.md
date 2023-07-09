@@ -20,9 +20,10 @@ To unlock the magic of Resume Ninja, install the necessary ingredients:
 
 ```bash
 pip install re
-pip install fastapi
-pip install starlette
-pip install jinja2
+pip install fastapi==0.99.0
+pip install starlette==0.27.0
+pip install jinja2==3.1.2
+pip install uvicorn==0.22.0
 ```
 ## Getting Started
 Now that you have everything set up, it's time to launch your resume into the digital realm:
